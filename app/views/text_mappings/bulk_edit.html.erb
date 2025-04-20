@@ -1,0 +1,61 @@
+<% content_for :title, "Bulk Edit Mappings" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Bulk Edit Mappings: <%= @category %></h1>
+  <div>
+    <%= link_to "Back to Mappings", text_mappings_path(category: @category), class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-primary text-white">
+    <h2 class="h5 mb-0"><%= pluralize(@text_mappings.count, 'mapping') %> in this category</h2>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-3">
+      Edit multiple corrected texts at once. Only changed values will be updated.
+    </p>
+    
+    <%= form_with(url: bulk_update_text_mappings_path, method: :post) do |form| %>
+      <%= form.hidden_field :category, value: @category %>
+      
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Original Text</th>
+              <th>Corrected Text</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @text_mappings.each do |mapping| %>
+              <tr>
+                <td><%= mapping.original_text %></td>
+                <td>
+                  <%= form.text_field "text_mappings[#{mapping.id}][corrected_text]", 
+                      value: mapping.corrected_text, 
+                      class: "form-control", 
+                      autocomplete: "off" %>
+                </td>
+                <td>
+                  <% if mapping.notes.present? %>
+                    <span class="text-muted" title="<%= mapping.notes %>">
+                      <%= truncate(mapping.notes, length: 50) %>
+                    </span>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="d-flex justify-content-end mt-4">
+        <%= form.submit "Update All Mappings", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div> 

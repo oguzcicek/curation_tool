@@ -1,0 +1,56 @@
+<% content_for :title, "Text Mapping Details" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Text Mapping Details</h1>
+  <div>
+    <%= link_to "Edit", edit_text_mapping_path(@text_mapping), class: "btn btn-primary" %>
+    <%= link_to "Back to Mappings", text_mappings_path, class: "btn btn-secondary ms-2" %>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <h5 class="text-muted mb-1">Category</h5>
+        <p class="mb-0 fs-5"><%= @text_mapping.category %></p>
+      </div>
+    </div>
+    
+    <hr>
+    
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <h5 class="text-muted mb-1">Original Text</h5>
+        <p class="mb-0 fs-5"><%= @text_mapping.original_text %></p>
+      </div>
+      
+      <div class="col-md-6 mb-3">
+        <h5 class="text-muted mb-1">Corrected Text</h5>
+        <p class="mb-0 fs-5"><%= @text_mapping.corrected_text %></p>
+      </div>
+    </div>
+    
+    <% if @text_mapping.notes.present? %>
+      <hr>
+      
+      <div class="row">
+        <div class="col-12">
+          <h5 class="text-muted mb-1">Notes</h5>
+          <p class="mb-0"><%= simple_format(@text_mapping.notes) %></p>
+        </div>
+      </div>
+    <% end %>
+    
+    <hr>
+    
+    <div class="row text-muted small">
+      <div class="col-md-6">
+        <p>Created: <%= @text_mapping.created_at.strftime("%Y-%m-%d %H:%M") %></p>
+      </div>
+      <div class="col-md-6">
+        <p>Last Updated: <%= @text_mapping.updated_at.strftime("%Y-%m-%d %H:%M") %></p>
+      </div>
+    </div>
+  </div>
+</div> 

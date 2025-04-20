@@ -1,0 +1,94 @@
+<% content_for :title, "Import Text Mappings" %>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white">
+    <h1 class="h4 mb-0">Import Text Mappings</h1>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-4">
+      Upload a CSV file with columns: <code>original_text</code>, <code>corrected_text</code>, and optionally <code>notes</code>.
+    </p>
+    
+    <%= form_with(url: process_import_text_mappings_path, method: :post, multipart: true) do |form| %>
+      <div class="mb-3">
+        <%= form.label :category, "Category for all imported mappings", class: "form-label" %>
+        
+        <div class="row mb-2">
+          <div class="col">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="category_type" id="use_existing" value="existing" checked>
+              <label class="form-check-label" for="use_existing">
+                Use existing category
+              </label>
+            </div>
+            <select id="category_select" name="category" class="form-select mt-2">
+              <option value="">-- Select a Category --</option>
+              <% @categories.each do |category| %>
+                <option value="<%= category.name %>"><%= category.name %></option>
+              <% end %>
+            </select>
+          </div>
+          
+          <div class="col">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="category_type" id="create_new" value="new">
+              <label class="form-check-label" for="create_new">
+                Create new category
+              </label>
+            </div>
+            <input type="text" id="new_category" class="form-control mt-2" placeholder="Enter new category name" disabled>
+          </div>
+        </div>
+        
+        <div class="form-text">All imported mappings will be assigned to this category</div>
+      </div>
+      
+      <div class="mb-3">
+        <%= form.label :file, "CSV File", class: "form-label" %>
+        <%= form.file_field :file, class: "form-control", accept: ".csv", required: true %>
+        <div class="form-text">Select a CSV file to import</div>
+      </div>
+      
+      <div class="alert alert-info">
+        <h5>CSV Format Example</h5>
+        <pre class="mb-0">original_text,corrected_text,notes
+Land-Rov,Land-Rover,Common misspelling
+bmw-3-series,bmw-3,Series format standardization</pre>
+      </div>
+      
+      <div class="mt-4">
+        <%= form.submit "Import Mappings", class: "btn btn-primary" %>
+        <%= link_to "Cancel", text_mappings_path, class: "btn btn-secondary ms-2" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const useExistingRadio = document.getElementById('use_existing');
+    const createNewRadio = document.getElementById('create_new');
+    const categorySelect = document.getElementById('category_select');
+    const newCategoryInput = document.getElementById('new_category');
+    
+    function updateFormState() {
+      if (useExistingRadio.checked) {
+        categorySelect.disabled = false;
+        categorySelect.name = 'category';
+        newCategoryInput.disabled = true;
+        newCategoryInput.name = '';
+      } else {
+        categorySelect.disabled = true;
+        categorySelect.name = '';
+        newCategoryInput.disabled = false;
+        newCategoryInput.name = 'category';
+      }
+    }
+    
+    useExistingRadio.addEventListener('change', updateFormState);
+    createNewRadio.addEventListener('change', updateFormState);
+    
+    // Initial setup
+    updateFormState();
+  });
+</script>

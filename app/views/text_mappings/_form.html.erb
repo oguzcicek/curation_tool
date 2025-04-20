@@ -1,0 +1,43 @@
+<%= form_with(model: text_mapping) do |form| %>
+  <% if text_mapping.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(text_mapping.errors.count, "error") %> prohibited this mapping from being saved:</h4>
+      <ul>
+        <% text_mapping.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :category_id, "Category", class: "form-label" %>
+    <%= form.collection_select :category_id, @categories, :id, :name, 
+                             { include_blank: "-- Select a Category --" }, 
+                             { class: "form-select", required: true } %>
+    <div class="form-text">Select a category for this mapping</div>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :original_text, class: "form-label" %>
+    <%= form.text_field :original_text, class: "form-control", required: true, autocomplete: "off" %>
+    <div class="form-text">The incorrect or variant text that appears in the data</div>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :corrected_text, class: "form-label" %>
+    <%= form.text_field :corrected_text, class: "form-control", required: true, autocomplete: "off" %>
+    <div class="form-text">The standardized or corrected version to use instead</div>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :notes, class: "form-label" %>
+    <%= form.text_area :notes, class: "form-control", rows: 3 %>
+    <div class="form-text">Optional notes about this mapping</div>
+  </div>
+
+  <div class="mt-4">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", text_mappings_path, class: "btn btn-secondary ms-2" %>
+  </div>
+<% end %> 

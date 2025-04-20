@@ -1,0 +1,109 @@
+<% content_for :title, "Category Details: #{@category.name}" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Category: <%= @category.name %></h1>
+  <div>
+    <%= link_to "Edit", edit_category_path(@category), class: "btn btn-primary" %>
+    <%= link_to "Back to Categories", categories_path, class: "btn btn-secondary ms-2" %>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <% if @category.description.present? %>
+      <h5 class="text-muted mb-2">Description</h5>
+      <p class="mb-0"><%= @category.description %></p>
+    <% else %>
+      <p class="text-muted mb-0">No description provided.</p>
+    <% end %>
+  </div>
+</div>
+<!--
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>
+    Text Mappings (<%= @mappings.count %>)
+    <% processed = @mappings.count { |m| m.processed? } %>
+    <% unprocessed = @mappings.count - processed %>
+    <% if @mappings.any? %>
+      <small class="text-muted">
+        <%= number_to_percentage(processed.to_f / @mappings.count * 100, precision: 0) %> processed
+      </small>
+    <% end %>
+  </h2>
+  <div class="btn-group">
+    <%= link_to "Add New Mapping", new_text_mapping_path(category_id: @category.id), class: "btn btn-success" %>
+    <% if @mappings.any? %>
+      <%= link_to "Bulk Edit", bulk_edit_text_mappings_path(category: @category.name), class: "btn btn-info" %>
+      
+      <%= button_to bulk_process_text_mappings_path, method: :post, class: "btn btn-success", params: { category_id: @category.id, process_action: 'mark_processed' } do %>
+        <i class="bi bi-check-circle-fill"></i> Mark All Processed
+      <% end %>
+      
+      <%= button_to bulk_process_text_mappings_path, method: :post, class: "btn btn-warning", params: { category_id: @category.id, process_action: 'mark_unprocessed' } do %>
+        <i class="bi bi-x-circle-fill"></i> Mark All Unprocessed
+      <% end %>
+    <% end %>
+  </div>
+</div> -->
+
+<% if @mappings.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Status</th>
+          <th>Original Text</th>
+          <th>Corrected Text</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @mappings.each do |mapping| %>
+          <tr class="<%= mapping.processed? ? 'table-light text-muted' : '' %>">
+            <td>
+              <% if mapping.processed? %>
+                <span class="badge rounded-pill bg-success">Processed</span>
+                <% if mapping.processed_at %>
+                  <small class="d-block text-muted"><%= mapping.processed_at.strftime("%Y-%m-%d") %></small>
+                <% end %>
+              <% else %>
+                <span class="badge rounded-pill bg-warning text-dark">Pending</span>
+              <% end %>
+            </td>
+            <td><%= mapping.original_text %></td>
+            <td><%= mapping.corrected_text %></td>
+            <td><%= mapping.notes.present? ? truncate(mapping.notes, length: 50) : "-" %></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <%= link_to edit_text_mapping_path(mapping), class: "btn btn-primary" do %>
+                  <i class="bi bi-pencil"></i>
+                <% end %>
+                
+                <% if mapping.processed? %>
+                  <%= button_to mark_unprocessed_text_mapping_path(mapping), method: :post, class: "btn btn-warning", title: "Mark as unprocessed" do %>
+                    <i class="bi bi-x-circle"></i>
+                  <% end %>
+                <% else %>
+                  <%= button_to mark_processed_text_mapping_path(mapping), method: :post, class: "btn btn-success", title: "Mark as processed" do %>
+                    <i class="bi bi-check-circle"></i>
+                  <% end %>
+                <% end %>
+                
+                <%= button_to text_mapping_path(mapping), method: :delete, 
+                    class: "btn btn-danger", title: "Delete",
+                    form: { data: { turbo_confirm: "Are you sure you want to delete this mapping?" } } do %>
+                  <i class="bi bi-trash"></i>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    No mappings found for this category.
+  </div>
+<% end %> 

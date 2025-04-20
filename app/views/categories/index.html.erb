@@ -1,0 +1,46 @@
+<% content_for :title, "Categories" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Categories</h1>
+  <div>
+    <%= link_to "New Category", new_category_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<% if @categories.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Mappings</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @categories.each do |category| %>
+          <tr>
+            <td><%= category.name %></td>
+            <td><%= category.description.present? ? truncate(category.description, length: 50) : "-" %></td>
+            <td><%= category.text_mappings.count %></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <%= link_to "View", category_path(category), class: "btn btn-info" %>
+                <%= link_to "Edit", edit_category_path(category), class: "btn btn-primary" %>
+                <%= button_to "Delete", category_path(category), method: :delete, 
+                    class: "btn btn-danger", 
+                    form: { data: { turbo_confirm: "Are you sure you want to delete this category?" } },
+                    disabled: category.text_mappings.exists? %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    No categories have been created yet.
+  </div>
+<% end %>

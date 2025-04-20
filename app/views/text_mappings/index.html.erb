@@ -1,0 +1,354 @@
+<% content_for :title, "Text Mappings" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Text Mappings</h1>
+  <div>
+    <%= link_to "New Mapping", new_text_mapping_path, class: "btn btn-primary" %>
+   <!-- <%= link_to "Import Mappings", import_text_mappings_path, class: "btn btn-secondary ms-2" %> -->
+  </div>
+</div>
+
+<!-- İşlem Durumu İstatistikleri -->
+<div class="card mb-4 border-info shadow-sm">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0">Processing Status</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="d-flex justify-content-between">
+          <span>Total mappings:</span>
+          <strong><%= @total_mappings %></strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="d-flex justify-content-between">
+          <span>Processed:</span>
+          <strong><%= @processed_count %> (<%= number_to_percentage(@processed_count.to_f / @total_mappings * 100, precision: 0) if @total_mappings > 0 %>)</strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="d-flex justify-content-between">
+          <span>Unprocessed:</span>
+          <strong><%= @unprocessed_count %> (<%= number_to_percentage(@unprocessed_count.to_f / @total_mappings * 100, precision: 0) if @total_mappings > 0 %>)</strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-check form-switch">
+          <%= check_box_tag 'show_processed', 'true', @show_processed, class: 'form-check-input', 
+                         onChange: "window.location.href='#{text_mappings_path(category: @category, query: @query, show_processed: !@show_processed)}'" %>
+          <label class="form-check-label" for="show_processed">
+            <%= @show_processed ? "Showing all" : "Hiding processed" %>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Sort By</h5>
+      </div>
+      <div class="card-body">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown">
+            <span>
+              <% case @sort_by %>
+              <% when 'processed' %>
+                Processing Status
+              <% when 'category' %>
+                Category
+              <% when 'original_text' %>
+                Original Text
+              <% when 'corrected_text' %>
+                Corrected Text
+              <% when 'processed_at' %>
+                Processing Date
+              <% end %>
+            </span>
+            <i class="bi bi-chevron-<%= @sort_direction == 'asc' ? 'up' : 'down' %>"></i>
+          </button>
+          <ul class="dropdown-menu w-100">
+            <li>
+              <%= link_to text_mappings_path(sort_by: 'processed', sort_direction: @sort_by == 'processed' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+                  class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'processed'}" do %>
+                Processing Status
+                <% if @sort_by == 'processed' %>
+
+                <% end %>
+              <% end %>
+            </li>
+            <li>
+              <%= link_to text_mappings_path(sort_by: 'category', sort_direction: @sort_by == 'category' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+                  class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'category'}" do %>
+                Category
+                <% if @sort_by == 'category' %>
+
+                <% end %>
+              <% end %>
+            </li>
+            <li>
+              <%= link_to text_mappings_path(sort_by: 'original_text', sort_direction: @sort_by == 'original_text' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+                  class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'original_text'}" do %>
+                Original Text
+                <% if @sort_by == 'original_text' %>
+
+                <% end %>
+              <% end %>
+            </li>
+            <li>
+              <%= link_to text_mappings_path(sort_by: 'corrected_text', sort_direction: @sort_by == 'corrected_text' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+                  class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'corrected_text'}" do %>
+                Corrected Text
+                <% if @sort_by == 'corrected_text' %>
+
+                <% end %>
+              <% end %>
+            </li>
+            <li>
+              <%= link_to text_mappings_path(sort_by: 'processed_at', sort_direction: @sort_by == 'processed_at' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+                  class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'processed_at'}" do %>
+                Processing Date
+                <% if @sort_by == 'processed_at' %>
+
+                <% end %>
+              <% end %>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-5">
+    <% if @categories.any? %>
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Filter by Category</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            <%= link_to "All Categories", text_mappings_path(query: @query, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction), class: "btn #{@category.blank? ? 'btn-primary' : 'btn-outline-secondary'}" %>
+            
+            <% @categories.each do |category| %>
+              <%= link_to category, text_mappings_path(category: category, query: @query, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction), 
+                  class: "btn #{@category == category ? 'btn-primary' : 'btn-outline-secondary'}" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Search Mappings</h5>
+      </div>
+      <div class="card-body">
+        <%= form_with(url: text_mappings_path, method: :get) do |form| %>
+          <div class="input-group">
+            <%= form.hidden_field :category, value: @category if @category.present? %>
+            <%= form.hidden_field :show_processed, value: @show_processed %>
+            <%= form.hidden_field :sort_by, value: @sort_by %>
+            <%= form.hidden_field :sort_direction, value: @sort_direction %>
+            <%= form.text_field :query, 
+                value: @query, 
+                class: "form-control", 
+                placeholder: "Search by text or notes...",
+                autocomplete: "off" %>
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-search"></i> Search
+            </button>
+            <% if @query.present? %>
+              <%= link_to "Clear", text_mappings_path(category: @category, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction), class: "btn btn-outline-secondary" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+<% if @query.present? %>
+  <div class="alert alert-info mb-4">
+    <strong>Search results for "<%= @query %>":</strong> <%= pluralize(@text_mappings.count, 'mapping') %> found
+    <%= @category.present? ? "in category \"#{@category}\"" : "" %>
+  </div>
+<% end %>
+
+<% if @category.present? && @text_mappings.any? %>
+  <div class="mb-4">
+    <div class="alert alert-info d-flex justify-content-between align-items-center">
+      <div>
+        <strong>Category Actions:</strong> 
+        <%= "#{@category}" %>
+      </div>
+      <div class="btn-group">
+        <%= link_to "Bulk Edit", bulk_edit_text_mappings_path(category: @category), class: "btn btn-info" %>
+        
+        <% if @category.present? %>
+          <% category_obj = Category.find_by(name: @category) %>
+          <% if category_obj %>
+            <%= button_to bulk_process_text_mappings_path, method: :post, class: "btn btn-success", params: { category_id: category_obj.id, process_action: 'mark_processed' } do %>
+              <i class="bi bi-check-circle-fill"></i> Mark All Processed
+            <% end %>
+            
+            <%= button_to bulk_process_text_mappings_path, method: :post, class: "btn btn-warning", params: { category_id: category_obj.id, process_action: 'mark_unprocessed' } do %>
+              <i class="bi bi-x-circle-fill"></i> Mark All Unprocessed
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @text_mappings.any? %>
+  <form action="<%= bulk_update_selected_text_mappings_path %>" method="post" id="bulk-update-form">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all-btn">Select All</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="deselect-all-btn">Deselect All</button>
+      </div>
+      
+      <div class="d-flex align-items-center">
+        <div class="input-group me-2" style="width: 300px;">
+          <input type="text" name="bulk_corrected_text" class="form-control" placeholder="Enter corrected text for selected...">
+        </div>
+        <button type="submit" class="btn btn-primary">Update Selected</button>
+      </div>
+    </div>
+  
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th width="50"><input type="checkbox" id="select-all-checkbox" class="form-check-input" /></th>
+            <th width="50">#</th>
+            <th>Status</th>
+            <th>Category</th>
+            <th>Original Text</th>
+            <th>Corrected Text</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @text_mappings.each_with_index do |mapping, index| %>
+            <tr class="<%= mapping.processed? ? 'table-light text-muted' : '' %>">
+              <td>
+                <input type="checkbox" name="mapping_ids[]" value="<%= mapping.id %>" class="form-check-input mapping-checkbox" id="mapping-<%= mapping.id %>">
+              </td>
+              <td class="text-center"><%= index + 1 %></td>
+              <td>
+                <% if mapping.processed? %>
+                  <span class="badge rounded-pill bg-success">Processed</span>
+                  <% if mapping.updated_at %>
+                    <small class="d-block text-muted"><%= mapping.updated_at.strftime("%Y-%m-%d") %></small>
+                  <% end %>
+                <% else %>
+                  <span class="badge rounded-pill bg-warning text-dark">Pending</span>
+                <% end %>
+              </td>
+              <td>
+                <%= link_to mapping.category.name, category_path(mapping.category), class: "text-decoration-none" %>
+              </td>
+              <td><%= mapping.original_text %></td>
+              <td><%= mapping.corrected_text %></td>
+              <td><%= mapping.notes.present? ? truncate(mapping.notes, length: 50) : "-" %></td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <%= link_to edit_text_mapping_path(mapping), class: "btn btn-primary" do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                  
+                  <% if mapping.processed? %>
+                    <%= button_to mark_unprocessed_text_mapping_path(mapping), method: :post, class: "btn btn-warning", title: "Mark as unprocessed" do %>
+                      <i class="bi bi-x-circle"></i>
+                    <% end %>
+                  <% else %>
+                    <%= button_to mark_processed_text_mapping_path(mapping), method: :post, class: "btn btn-success", title: "Mark as processed" do %>
+                      <i class="bi bi-check-circle"></i>
+                    <% end %>
+                  <% end %>
+                  
+                  <%= button_to text_mapping_path(mapping), method: :delete, 
+                      class: "btn btn-danger", title: "Delete",
+                      form: { data: { turbo_confirm: "Are you sure you want to delete this mapping?" } } do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </form>
+<% else %>
+  <div class="alert alert-info">
+    <% if @query.present? %>
+      No mappings found for search "<%= @query %>" <%= @category.present? ? "in category \"#{@category}\"" : "" %>.
+    <% elsif @category.present? %>
+      No mappings found for category "<%= @category %>".
+    <% elsif !@show_processed %>
+      No unprocessed mappings found. <a href="<%= text_mappings_path(show_processed: true) %>" class="alert-link">Show processed mappings</a>.
+    <% else %>
+      No text mappings have been created yet.
+    <% end %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    setupCheckboxes();
+  });
+
+  // İlk yükleme ve Turbo gezintileri için fonksiyonu tanımla
+  function setupCheckboxes() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const mappingCheckboxes = document.querySelectorAll('.mapping-checkbox');
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const deselectAllBtn = document.getElementById('deselect-all-btn');
+    
+    if(!selectAllCheckbox) return; // Form yoksa çık
+    
+    // Select all checkbox functionality
+    selectAllCheckbox.addEventListener('click', function() {
+      const isChecked = this.checked;
+      mappingCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = isChecked;
+      });
+    });
+    
+    // Select all button
+    selectAllBtn.addEventListener('click', function() {
+      mappingCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = true;
+      });
+      selectAllCheckbox.checked = true;
+    });
+    
+    // Deselect all button
+    deselectAllBtn.addEventListener('click', function() {
+      mappingCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = false;
+      });
+      selectAllCheckbox.checked = false;
+    });
+    
+    // Update select all checkbox when individual checkboxes change
+    mappingCheckboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('click', function() {
+        const allChecked = Array.from(mappingCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(mappingCheckboxes).some(cb => cb.checked);
+        
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = anyChecked && !allChecked;
+      });
+    });
+  }
+</script>
