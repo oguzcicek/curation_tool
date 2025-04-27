@@ -50,6 +50,16 @@
               <%= link_to "Import Mappings", import_text_mappings_path, class: "nav-link #{current_page?(import_text_mappings_path) ? 'active' : ''}" %>
             </li> -->
           </ul>
+          
+          <% if session[:authenticated] %>
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <%= button_to logout_path, method: :delete, class: "btn btn-outline-light" do %>
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                <% end %>
+              </li>
+            </ul>
+          <% end %>
         </div>
       </div>
     </nav>

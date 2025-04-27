@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
 
+  # Authentication
+  get '/login', to: 'auth#login'
+  post '/login', to: 'auth#authenticate'
+  delete '/logout', to: 'auth#logout'
+
   # Text Mapping
   resources :text_mappings do
     member do
