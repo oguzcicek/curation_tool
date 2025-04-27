@@ -14,8 +14,53 @@
     <%= form.label :category_id, "Category", class: "form-label" %>
     <%= form.collection_select :category_id, @categories, :id, :name, 
                              { include_blank: "-- Select a Category --" }, 
-                             { class: "form-select", required: true } %>
+                             { class: "form-select", required: true, id: "category-select" } %>
     <div class="form-text">Select a category for this mapping</div>
+  </div>
+
+  <div class="mb-3" id="parent-mapping-container" style="<%= text_mapping.category_id == 2 || params[:category_id].to_i == 2 ? '' : 'display: none;' %>">
+    <%= form.label :parent_id, "Parent (Make)", class: "form-label" %>
+    <%= form.collection_select :parent_id, @parent_mappings || [], :id, :corrected_text, 
+                             { include_blank: "-- Select a Parent --" }, 
+                             { class: "form-select" } %>
+    <div class="form-text">For model groups, select the related make</div>
+  </div>
+
+  <!-- Canonical Relationship Information -->
+  <div class="mb-3">
+    <label class="form-label">Canonical Relationship</label>
+    
+    <% if text_mapping.canonical? %>
+      <% if text_mapping.aliases.exists? %>
+        <div class="alert alert-info">
+          <p>This record is a canonical (main) record and has <strong><%= text_mapping.aliases.count %></strong> alias records.</p>
+          <p><%= link_to "View alias records", show_aliases_text_mapping_path(text_mapping), class: "btn btn-sm btn-outline-primary" %></p>
+        </div>
+      <% else %>
+        <div class="alert alert-secondary">
+          This record is a canonical (main) record and has no alias records yet.
+        </div>
+      <% end %>
+    <% elsif text_mapping.canonical.present? %>
+      <div class="alert alert-info">
+        <p>This record is an alias of <strong><%= text_mapping.canonical.original_text %></strong>.</p>
+        <div class="d-flex align-items-center gap-2">
+          <%= link_to "View canonical record", text_mapping_path(text_mapping.canonical), class: "btn btn-sm btn-outline-primary" %>
+          
+          <div class="form-check form-switch ms-3">
+            <%= form.check_box :canonical_id, { class: 'form-check-input', checked: text_mapping.canonical_id.present? }, text_mapping.canonical_id, nil %>
+            <label class="form-check-label" for="text_mapping_canonical_id">
+              Maintain canonical relationship
+            </label>
+          </div>
+        </div>
+        <small class="text-muted d-block mt-2">If you uncheck this box, the record will be detached from the canonical relationship and become an independent record.</small>
+      </div>
+    <% else %>
+      <div class="alert alert-secondary">
+        This record has no canonical relationship. To create a canonical relationship, return to the main list after saving and use multiple selection to establish a relationship.
+      </div>
+    <% end %>
   </div>
 
   <div class="mb-3">
@@ -36,8 +81,37 @@
     <div class="form-text">Optional notes about this mapping</div>
   </div>
 
-  <div class="mt-4">
-    <%= form.submit class: "btn btn-primary" %>
-    <%= link_to "Cancel", text_mappings_path, class: "btn btn-secondary ms-2" %>
+  <div class="mb-3">
+    <div class="form-check form-switch">
+      <%= form.check_box :is_hidden, class: "form-check-input" %>
+      <label class="form-check-label" for="text_mapping_is_hidden">
+        Hide from Application
+      </label>
+      <div class="form-text text-muted">If checked, this record will not be used in the application.</div>
+    </div>
   </div>
-<% end %> 
+
+  <div class="text-end mt-4">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", text_mappings_path, class: "btn btn-outline-secondary ms-2" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category-select');
+    const parentContainer = document.getElementById('parent-mapping-container');
+    
+    if (categorySelect && parentContainer) {
+      // Kategori değiştiğinde parent container'ı göster/gizle
+      categorySelect.addEventListener('change', function() {
+        // 2 numaralı kategori (Model Group) seçildiğinde parent container'ı göster
+        if (this.value === '2') {
+          parentContainer.style.display = 'block';
+        } else {
+          parentContainer.style.display = 'none';
+        }
+      });
+    }
+  });
+</script> 

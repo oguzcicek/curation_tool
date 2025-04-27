@@ -35,7 +35,7 @@ remote_stage:
   pool: 5
   database: eliteauto_stage
   username: eliteauto_ocicek
-  password: "FadPeuUE;-wO.p"
+  password: "VEoj26Y76QmN9"
   host: 173.237.189.128
   port: 3306
   reconnect: true

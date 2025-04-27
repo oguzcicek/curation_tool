@@ -1,16 +1,15 @@
 Rails.application.routes.draw do
-  get "categories/index"
-  get "categories/new"
-  get "categories/create"
-  get "categories/edit"
-  get "categories/update"
-  get "categories/destroy"
-  # RESTful routes for text mappings
-  
+
+  # Text Mapping
   resources :text_mappings do
     member do
       post :mark_processed
       post :mark_unprocessed
+      post :set_as_canonical
+      post :add_to_canonical
+      get :find_canonical_candidates
+      get :show_aliases
+      post :toggle_hidden
     end
     
     collection do
@@ -20,6 +19,10 @@ Rails.application.routes.draw do
       post :bulk_update
       post :bulk_process
       post :bulk_update_selected
+      get :show_children
+      get :find_duplicates
+      post :process_duplicates
+      post :create_canonical_relationship
     end
   end
   
@@ -32,21 +35,13 @@ Rails.application.routes.draw do
       resources :text_mappings, only: [:index] do
         collection do
           post :correct_text
+          get :hierarchical
+          get :canonicals
         end
       end
     end
   end
   
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
   root "text_mappings#index"
 end

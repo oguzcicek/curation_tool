@@ -8,7 +8,30 @@
   </div>
 </div>
 
-<!-- İşlem Durumu İstatistikleri -->
+<!-- Canonical İlişkisi Modal -->
+<div class="modal fade" id="createCanonicalModal" tabindex="-1" aria-labelledby="createCanonicalModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createCanonicalModalLabel">Create Canonical Relationship</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <p>Select one of the records below as the canonical (main) record. Other records will automatically be set as aliases (variants) of this record.</p>
+          <p><strong>Note:</strong> This action cannot be undone and all relationships will be reconfigured.</p>
+        </div>
+        <div id="selectedMappingsList" class="mt-3">
+          <!-- Selected mappings will be listed here via JavaScript -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="card mb-4 border-info shadow-sm">
   <div class="card-header bg-info text-white">
     <h5 class="mb-0">Processing Status</h5>
@@ -36,7 +59,7 @@
       <div class="col-md-3">
         <div class="form-check form-switch">
           <%= check_box_tag 'show_processed', 'true', @show_processed, class: 'form-check-input', 
-                         onChange: "window.location.href='#{text_mappings_path(category: @category, query: @query, show_processed: !@show_processed)}'" %>
+                         onChange: "window.location.href='#{text_mappings_path(category: @category, query: @query, show_processed: !@show_processed, show_canonicals: @show_canonicals)}'" %>
           <label class="form-check-label" for="show_processed">
             <%= @show_processed ? "Showing all" : "Hiding processed" %>
           </label>
@@ -73,7 +96,7 @@
           </button>
           <ul class="dropdown-menu w-100">
             <li>
-              <%= link_to text_mappings_path(sort_by: 'processed', sort_direction: @sort_by == 'processed' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+              <%= link_to text_mappings_path(sort_by: 'processed', sort_direction: @sort_by == 'processed' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed, show_canonicals: @show_canonicals), 
                   class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'processed'}" do %>
                 Processing Status
                 <% if @sort_by == 'processed' %>
@@ -82,7 +105,7 @@
               <% end %>
             </li>
             <li>
-              <%= link_to text_mappings_path(sort_by: 'category', sort_direction: @sort_by == 'category' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+              <%= link_to text_mappings_path(sort_by: 'category', sort_direction: @sort_by == 'category' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed, show_canonicals: @show_canonicals), 
                   class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'category'}" do %>
                 Category
                 <% if @sort_by == 'category' %>
@@ -91,7 +114,7 @@
               <% end %>
             </li>
             <li>
-              <%= link_to text_mappings_path(sort_by: 'original_text', sort_direction: @sort_by == 'original_text' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+              <%= link_to text_mappings_path(sort_by: 'original_text', sort_direction: @sort_by == 'original_text' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed, show_canonicals: @show_canonicals), 
                   class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'original_text'}" do %>
                 Original Text
                 <% if @sort_by == 'original_text' %>
@@ -100,7 +123,7 @@
               <% end %>
             </li>
             <li>
-              <%= link_to text_mappings_path(sort_by: 'corrected_text', sort_direction: @sort_by == 'corrected_text' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+              <%= link_to text_mappings_path(sort_by: 'corrected_text', sort_direction: @sort_by == 'corrected_text' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed, show_canonicals: @show_canonicals), 
                   class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'corrected_text'}" do %>
                 Corrected Text
                 <% if @sort_by == 'corrected_text' %>
@@ -109,7 +132,7 @@
               <% end %>
             </li>
             <li>
-              <%= link_to text_mappings_path(sort_by: 'processed_at', sort_direction: @sort_by == 'processed_at' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed), 
+              <%= link_to text_mappings_path(sort_by: 'processed_at', sort_direction: @sort_by == 'processed_at' && @sort_direction == 'asc' ? 'desc' : 'asc', category: @category, query: @query, show_processed: @show_processed, show_canonicals: @show_canonicals), 
                   class: "dropdown-item d-flex justify-content-between align-items-center #{'active' if @sort_by == 'processed_at'}" do %>
                 Processing Date
                 <% if @sort_by == 'processed_at' %>
@@ -118,6 +141,15 @@
               <% end %>
             </li>
           </ul>
+        </div>
+        
+        <!-- Canonical Filtering -->
+        <div class="form-check form-switch mt-3">
+          <%= check_box_tag 'show_canonicals', 'true', @show_canonicals, class: 'form-check-input', 
+                         onChange: "window.location.href='#{text_mappings_path(category: @category, query: @query, show_processed: @show_processed, show_canonicals: !@show_canonicals)}'" %>
+          <label class="form-check-label" for="show_canonicals">
+            <%= @show_canonicals ? "Only showing canonicals" : "Showing all records" %>
+          </label>
         </div>
       </div>
     </div>
@@ -131,10 +163,10 @@
         </div>
         <div class="card-body">
           <div class="d-flex flex-wrap gap-2">
-            <%= link_to "All Categories", text_mappings_path(query: @query, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction), class: "btn #{@category.blank? ? 'btn-primary' : 'btn-outline-secondary'}" %>
+            <%= link_to "All Categories", text_mappings_path(query: @query, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction, show_canonicals: @show_canonicals), class: "btn #{@category.blank? ? 'btn-primary' : 'btn-outline-secondary'}" %>
             
             <% @categories.each do |category| %>
-              <%= link_to category, text_mappings_path(category: category, query: @query, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction), 
+              <%= link_to category, text_mappings_path(category: category, query: @query, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction, show_canonicals: @show_canonicals), 
                   class: "btn #{@category == category ? 'btn-primary' : 'btn-outline-secondary'}" %>
             <% end %>
           </div>
@@ -155,6 +187,7 @@
             <%= form.hidden_field :show_processed, value: @show_processed %>
             <%= form.hidden_field :sort_by, value: @sort_by %>
             <%= form.hidden_field :sort_direction, value: @sort_direction %>
+            <%= form.hidden_field :show_canonicals, value: @show_canonicals %>
             <%= form.text_field :query, 
                 value: @query, 
                 class: "form-control", 
@@ -164,7 +197,7 @@
               <i class="bi bi-search"></i> Search
             </button>
             <% if @query.present? %>
-              <%= link_to "Clear", text_mappings_path(category: @category, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction), class: "btn btn-outline-secondary" %>
+              <%= link_to "Clear", text_mappings_path(category: @category, show_processed: @show_processed, sort_by: @sort_by, sort_direction: @sort_direction, show_canonicals: @show_canonicals), class: "btn btn-outline-secondary" %>
             <% end %>
           </div>
         <% end %>
@@ -172,14 +205,9 @@
     </div>
   </div>
 </div>
-<% if @query.present? %>
-  <div class="alert alert-info mb-4">
-    <strong>Search results for "<%= @query %>":</strong> <%= pluralize(@text_mappings.count, 'mapping') %> found
-    <%= @category.present? ? "in category \"#{@category}\"" : "" %>
-  </div>
-<% end %>
 
-<% if @category.present? && @text_mappings.any? %>
+<!-- Canonical İşlemleri -->
+<% if @category.present? %>
   <div class="mb-4">
     <div class="alert alert-info d-flex justify-content-between align-items-center">
       <div>
@@ -187,7 +215,7 @@
         <%= "#{@category}" %>
       </div>
       <div class="btn-group">
-        <%= link_to "Bulk Edit", bulk_edit_text_mappings_path(category: @category), class: "btn btn-info" %>
+        <%= link_to "Find Duplicates", find_duplicates_text_mappings_path(category: @category), class: "btn btn-info" %>
         
         <% if @category.present? %>
           <% category_obj = Category.find_by(name: @category) %>
@@ -206,12 +234,32 @@
   </div>
 <% end %>
 
+<% if @category.present? && Category.find_by(name: @category)&.id == 2 %>
+  <!-- Get records from the Model Group category -->
+  <% 
+    # Get makes from the Make category
+    make_category = Category.find_by(id: 1)
+    if make_category
+      makes = TextMapping.where(category_id: make_category.id).order(:original_text)
+      
+      # Get model groups with a parent_id
+      model_groups_with_parents = TextMapping.where(category_id: 2).where.not(parent_id: nil)
+      
+      # Calculate how many model groups each make has
+      make_counts = model_groups_with_parents.group(:parent_id).count
+    end
+  %>
+  
+
+<% end %>
+
 <% if @text_mappings.any? %>
   <form action="<%= bulk_update_selected_text_mappings_path %>" method="post" id="bulk-update-form">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all-btn">Select All</button>
         <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="deselect-all-btn">Deselect All</button>
+        <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="create-canonical-btn" style="display: none;">Create Canonical Relationship</button>
       </div>
       
       <div class="d-flex align-items-center">
@@ -221,7 +269,8 @@
         <button type="submit" class="btn btn-primary">Update Selected</button>
       </div>
     </div>
-  
+    
+    <% cache [request.path, @page, @per_page, @sort_by, @sort_direction, @category, @query, @show_processed, @show_canonicals, @text_mappings.map(&:updated_at).max] do %>
     <div class="table-responsive">
       <table class="table table-striped table-hover">
         <thead class="table-dark">
@@ -232,6 +281,10 @@
             <th>Category</th>
             <th>Original Text</th>
             <th>Corrected Text</th>
+            <% if @category.present? && Category.find_by(name: @category)&.id == 2 %>
+              <th>Parent (Make)</th>
+            <% end %>
+            <th>Canonical</th>
             <th>Notes</th>
             <th>Actions</th>
           </tr>
@@ -258,6 +311,43 @@
               </td>
               <td><%= mapping.original_text %></td>
               <td><%= mapping.corrected_text %></td>
+              <% if @category.present? && Category.find_by(name: @category)&.id == 2 %>
+                <td>
+                  <% if mapping.parent_id && mapping.parent && mapping.parent.corrected_text.present? %>
+                    <span class="badge bg-info text-white">
+                      <%= link_to mapping.parent.corrected_text, show_children_text_mappings_path(parent_id: mapping.parent.id), class: "text-white text-decoration-none" %>
+                    </span>
+                  <% elsif mapping.parent_id && @parent_mappings && @parent_mappings[mapping.parent_id] %>
+                    <% parent = @parent_mappings[mapping.parent_id] %>
+                    <% if parent.corrected_text.present? %>
+                      <span class="badge bg-info text-white">
+                        <%= link_to parent.corrected_text, show_children_text_mappings_path(parent_id: parent.id), class: "text-white text-decoration-none" %>
+                      </span>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+              <% end %>
+              <td>
+                <% if mapping.canonical? %>
+                  <% if mapping.aliases.exists? %>
+                    <span class="badge bg-primary" title="This record is a canonical (main) record and has <%= mapping.aliases.count %> alias records">
+                      Canonical (<%= mapping.aliases.count %>)
+                    </span>
+                  <% else %>
+                    <span class="badge bg-secondary">Canonical</span>
+                  <% end %>
+                <% elsif mapping.canonical.present? %>
+                  <span class="badge bg-info">
+                    <%= link_to "Alias of #{mapping.canonical.original_text}", text_mapping_path(mapping.canonical), class: "text-white text-decoration-none" %>
+                  </span>
+                <% else %>
+                  <span class="text-muted">-</span>
+                <% end %>
+              </td>
               <td><%= mapping.notes.present? ? truncate(mapping.notes, length: 50) : "-" %></td>
               <td>
                 <div class="btn-group btn-group-sm">
@@ -275,6 +365,24 @@
                     <% end %>
                   <% end %>
                   
+                  <%= button_to toggle_hidden_text_mapping_path(mapping), method: :post, class: "btn #{mapping.is_hidden ? 'btn-info' : 'btn-secondary'}", 
+                             title: "#{mapping.is_hidden ? 'Make visible' : 'Hide record'}" do %>
+                    <i class="bi <%= mapping.is_hidden ? 'bi-eye' : 'bi-eye-slash' %>"></i>
+                  <% end %>
+                  
+                  <% if @category.present? && Category.find_by(name: @category)&.id == 1 %>
+                    <!-- Eğer bu bir make ise, model gruplarını görüntüleme butonu ekle -->
+                    <% 
+                      # Search for a make by corrected_text
+                      corrected_make = TextMapping.find_by(corrected_text: mapping.corrected_text, category_id: 1)
+                      view_id = corrected_make&.id || mapping.id
+                    %>
+                    <%= link_to show_children_text_mappings_path(parent_id: view_id), 
+                        class: "btn btn-info", title: "View Model Groups" do %>
+                      <i class="bi bi-diagram-3"></i>
+                    <% end %>
+                  <% end %>
+                  
                   <%= button_to text_mapping_path(mapping), method: :delete, 
                       class: "btn btn-danger", title: "Delete",
                       form: { data: { turbo_confirm: "Are you sure you want to delete this mapping?" } } do %>
@@ -287,7 +395,25 @@
         </tbody>
       </table>
     </div>
+    <% end %>
+    
+    <!-- Pagination Controls -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <div>
+        <span class="text-muted">
+          <%= page_entries_info @text_mappings, entry_name: 'mapping' %>
+        </span>
+      </div>
+      
+      <div>
+        <div class="btn-group">
+          <%= link_to_prev_page @text_mappings, raw('&laquo; Previous'), class: 'btn btn-outline-primary' %>
+          <%= link_to_next_page @text_mappings, raw('Next &raquo;'), class: 'btn btn-outline-primary' %>
+        </div>
+      </div>
+    </div>
   </form>
+  
 <% else %>
   <div class="alert alert-info">
     <% if @query.present? %>
@@ -296,6 +422,8 @@
       No mappings found for category "<%= @category %>".
     <% elsif !@show_processed %>
       No unprocessed mappings found. <a href="<%= text_mappings_path(show_processed: true) %>" class="alert-link">Show processed mappings</a>.
+    <% elsif @show_canonicals %>
+      No canonical mappings found. <a href="<%= text_mappings_path(show_canonicals: false) %>" class="alert-link">Show all mappings</a>.
     <% else %>
       No text mappings have been created yet.
     <% end %>
@@ -305,16 +433,18 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     setupCheckboxes();
+    setupCanonicalModal();
   });
 
-  // İlk yükleme ve Turbo gezintileri için fonksiyonu tanımla
+  // Define function for initial load and Turbo navigation
   function setupCheckboxes() {
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
     const mappingCheckboxes = document.querySelectorAll('.mapping-checkbox');
     const selectAllBtn = document.getElementById('select-all-btn');
     const deselectAllBtn = document.getElementById('deselect-all-btn');
+    const createCanonicalBtn = document.getElementById('create-canonical-btn');
     
-    if(!selectAllCheckbox) return; // Form yoksa çık
+    if(!selectAllCheckbox) return; // If form does not exist, exit
     
     // Select all checkbox functionality
     selectAllCheckbox.addEventListener('click', function() {
@@ -322,6 +452,7 @@
       mappingCheckboxes.forEach(function(checkbox) {
         checkbox.checked = isChecked;
       });
+      updateCreateCanonicalButton();
     });
     
     // Select all button
@@ -330,6 +461,7 @@
         checkbox.checked = true;
       });
       selectAllCheckbox.checked = true;
+      updateCreateCanonicalButton();
     });
     
     // Deselect all button
@@ -338,6 +470,7 @@
         checkbox.checked = false;
       });
       selectAllCheckbox.checked = false;
+      updateCreateCanonicalButton();
     });
     
     // Update select all checkbox when individual checkboxes change
@@ -348,7 +481,95 @@
         
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = anyChecked && !allChecked;
+        updateCreateCanonicalButton();
       });
+    });
+    
+    // Update the Create Canonical button visibility
+    function updateCreateCanonicalButton() {
+      const selectedCount = document.querySelectorAll('.mapping-checkbox:checked').length;
+      createCanonicalBtn.style.display = selectedCount >= 2 ? 'inline-block' : 'none';
+    }
+    
+    // Initial check on page load
+    updateCreateCanonicalButton();
+  }
+  
+  // Setup canonical relationship modal
+  function setupCanonicalModal() {
+    const createCanonicalBtn = document.getElementById('create-canonical-btn');
+    const selectedMappingsList = document.getElementById('selectedMappingsList');
+    const modalElement = document.getElementById('createCanonicalModal');
+    let canonicalModal;
+    
+    if (modalElement) {
+      canonicalModal = new bootstrap.Modal(modalElement);
+    }
+    
+    if (!createCanonicalBtn || !selectedMappingsList || !canonicalModal) return;
+    
+    createCanonicalBtn.addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.mapping-checkbox:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      
+      if (selectedIds.length < 2) {
+        alert('You must select at least 2 records.');
+        return;
+      }
+      
+      // Clear previous content
+      selectedMappingsList.innerHTML = '';
+      
+      // Build table for selected mappings
+      const table = document.createElement('table');
+      table.className = 'table table-bordered table-striped';
+      
+      // Create table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>ID</th>
+          <th>Original Text</th>
+          <th>Corrected Text</th>
+          <th>Action</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+      
+      // Create table body
+      const tbody = document.createElement('tbody');
+      
+      // For each selected checkbox, add a row to the table
+      selectedCheckboxes.forEach(function(checkbox) {
+        const mappingId = checkbox.value;
+        const row = checkbox.closest('tr');
+        
+        if (row) {
+          const originalText = row.querySelector('td:nth-child(5)').textContent.trim();
+          const correctedText = row.querySelector('td:nth-child(6)').textContent.trim();
+          
+          const tableRow = document.createElement('tr');
+          tableRow.innerHTML = `
+            <td>${mappingId}</td>
+            <td>${originalText}</td>
+            <td>${correctedText}</td>
+            <td>
+              <form action="/text_mappings/create_canonical_relationship" method="post">
+                <input type="hidden" name="canonical_id" value="${mappingId}">
+                <input type="hidden" name="mapping_ids" value="${selectedIds.join(',')}">
+                <button type="submit" class="btn btn-primary btn-sm">Make Canonical</button>
+              </form>
+            </td>
+          `;
+          tbody.appendChild(tableRow);
+        }
+      });
+      
+      table.appendChild(tbody);
+      selectedMappingsList.appendChild(table);
+      
+      // Show the modal
+      canonicalModal.show();
     });
   }
 </script>

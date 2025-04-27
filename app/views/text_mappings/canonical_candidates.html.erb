@@ -1,0 +1,44 @@
+<h1>Canonical Candidates</h1>
+
+<div class="alert alert-info">
+  Select a canonical record for <strong><%= @text_mapping.original_text %></strong>. 
+  A canonical record is the "correct" or "main" record. Other records with the same meaning will reference this record.
+</div>
+
+<div class="mb-4">
+  <a href="<%= text_mapping_path(@text_mapping) %>" class="btn btn-secondary">Go Back</a>
+</div>
+
+<% if @candidates.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Original Text</th>
+          <th>Corrected Text</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @candidates.each do |candidate| %>
+          <tr>
+            <td><%= candidate.id %></td>
+            <td><%= candidate.original_text %></td>
+            <td><%= candidate.corrected_text %></td>
+            <td>
+              <%= form_tag add_to_canonical_text_mapping_path(@text_mapping), method: :post do %>
+                <%= hidden_field_tag :canonical_id, candidate.id %>
+                <%= submit_tag "Select this record", class: "btn btn-primary btn-sm", data: { confirm: "Are you sure you want to set this record as canonical?" } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-warning">
+    No suitable canonical records found in the same category.
+  </div>
+<% end %> 

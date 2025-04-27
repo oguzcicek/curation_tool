@@ -1,0 +1,72 @@
+<h1>Duplicate Records</h1>
+
+<div class="alert alert-info">
+  <p>You are viewing records in the <strong><%= @category %></strong> category that have the same corrected text.</p>
+  <p>For each group, you can select one record as the "canonical" (main/correct) record. Other records will reference this record.</p>
+</div>
+
+<div class="mb-4">
+  <a href="<%= text_mappings_path(category: @category) %>" class="btn btn-secondary">Go Back</a>
+</div>
+
+<% if @duplicate_groups.any? %>
+  <% @duplicate_groups.each_with_index do |group, index| %>
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5>Group #<%= index + 1 %>: "<%= group.first.corrected_text %>"</h5>
+        <p>Found <%= group.size %> records with this corrected text.</p>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Original Text</th>
+                <th>Corrected Text</th>
+                <th>Processed</th>
+                <th>Is Canonical?</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% group.each do |record| %>
+                <tr>
+                  <td><%= record.id %></td>
+                  <td><%= record.original_text %></td>
+                  <td><%= record.corrected_text %></td>
+                  <td><%= record.processed? ? 'Yes' : 'No' %></td>
+                  <td>
+                    <% if record.canonical? %>
+                      <span class="badge bg-success">Canonical</span>
+                    <% elsif record.canonical.present? %>
+                      <span class="badge bg-warning">
+                        Alias (Ref: <%= record.canonical.original_text %>)
+                      </span>
+                    <% else %>
+                      <span class="badge bg-secondary">-</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <a href="<%= text_mapping_path(record) %>" class="btn btn-info btn-sm">View</a>
+                    
+                    <%= form_tag process_duplicates_text_mappings_path, method: :post, style: "display:inline-block" do %>
+                      <%= hidden_field_tag :corrected_text, record.corrected_text %>
+                      <%= hidden_field_tag :canonical_id, record.id %>
+                      <%= submit_tag "Make Canonical", class: "btn btn-primary btn-sm", 
+                                    data: { confirm: "Are you sure you want to make this record canonical and link other records to it?" } %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% else %>
+  <div class="alert alert-warning">
+    No records found with the same corrected text.
+  </div>
+<% end %> 

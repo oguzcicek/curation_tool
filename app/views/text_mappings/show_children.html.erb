@@ -1,0 +1,237 @@
+<% 
+  display_text = @parent.corrected_text.present? ? @parent.corrected_text : @parent.original_text 
+  display_title = "Model Groups for #{display_text}"
+%>
+<% content_for :title, display_title %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Model Groups for "<%= display_text %>"</h1>
+  <div class="d-flex gap-2">
+    <%= link_to "Back to All Mappings", text_mappings_path, class: "btn btn-secondary" %>
+    <%= link_to "New Model Group", new_text_mapping_path(category_id: @model_group_category.id, parent_id: @parent_id), class: "btn btn-primary" %>
+  </div>
+</div>
+
+<!-- Parent Details Card -->
+<div class="card mb-4 border-info shadow-sm">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0">Make Details</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+          <span>Original Text:</span>
+          <strong><%= @parent.original_text %></strong>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+          <span>Corrected Text:</span>
+          <strong><%= @parent.corrected_text.present? ? @parent.corrected_text : '-' %></strong>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+          <span>Category:</span>
+          <strong><%= @parent.category.name if @parent.category %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- İşlem Durumu İstatistikleri -->
+<div class="card mb-4 border-info shadow-sm">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0">Processing Status</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+          <span>Total model groups:</span>
+          <strong><%= @total_mappings %></strong>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+          <span>Processed:</span>
+          <strong><%= @processed_count %> (<%= number_to_percentage(@processed_count.to_f / @total_mappings * 100, precision: 0) if @total_mappings > 0 %>)</strong>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+          <span>Unprocessed:</span>
+          <strong><%= @unprocessed_count %> (<%= number_to_percentage(@unprocessed_count.to_f / @total_mappings * 100, precision: 0) if @total_mappings > 0 %>)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if @text_mappings.any? %>
+  <!-- Bulk Action Buttons -->
+  <div class="mb-4">
+    <div class="alert alert-info d-flex justify-content-between align-items-center">
+      <div>
+        <strong>Bulk Actions:</strong> 
+      </div>
+      <div class="btn-group">
+        <%= button_to bulk_process_text_mappings_path, method: :post, class: "btn btn-success", 
+            params: { 
+              category_id: @model_group_category.id, 
+              process_action: 'mark_processed',
+              parent_id: @parent_id,
+              redirect_url: show_children_text_mappings_path(parent_id: @parent_id)
+            } do %>
+          <i class="bi bi-check-circle-fill"></i> Mark All Processed
+        <% end %>
+        
+        <%= button_to bulk_process_text_mappings_path, method: :post, class: "btn btn-warning", 
+            params: { 
+              category_id: @model_group_category.id, 
+              process_action: 'mark_unprocessed',
+              parent_id: @parent_id,
+              redirect_url: show_children_text_mappings_path(parent_id: @parent_id)
+            } do %>
+          <i class="bi bi-x-circle-fill"></i> Mark All Unprocessed
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <form action="<%= bulk_update_selected_text_mappings_path %>" method="post" id="bulk-update-form">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all-btn">Select All</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="deselect-all-btn">Deselect All</button>
+      </div>
+      
+      <div class="d-flex align-items-center">
+        <div class="input-group me-2" style="width: 300px;">
+          <input type="text" name="bulk_corrected_text" class="form-control" placeholder="Enter corrected text for selected...">
+        </div>
+        <button type="submit" class="btn btn-primary">Update Selected</button>
+      </div>
+    </div>
+    <%= hidden_field_tag :redirect_url, show_children_text_mappings_path(parent_id: @parent_id) %>
+  
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th width="50"><input type="checkbox" id="select-all-checkbox" class="form-check-input" /></th>
+            <th width="50">#</th>
+            <th>Status</th>
+            <th>Original Text</th>
+            <th>Corrected Text</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @text_mappings.each_with_index do |mapping, index| %>
+            <tr class="<%= mapping.processed? ? 'table-light text-muted' : '' %>">
+              <td>
+                <input type="checkbox" name="mapping_ids[]" value="<%= mapping.id %>" class="form-check-input mapping-checkbox" id="mapping-<%= mapping.id %>">
+              </td>
+              <td class="text-center"><%= index + 1 %></td>
+              <td>
+                <% if mapping.processed? %>
+                  <span class="badge rounded-pill bg-success">Processed</span>
+                  <% if mapping.updated_at %>
+                    <small class="d-block text-muted"><%= mapping.updated_at.strftime("%Y-%m-%d") %></small>
+                  <% end %>
+                <% else %>
+                  <span class="badge rounded-pill bg-warning text-dark">Pending</span>
+                <% end %>
+              </td>
+              <td><%= mapping.original_text %></td>
+              <td><%= mapping.corrected_text %></td>
+              <td><%= mapping.notes.present? ? truncate(mapping.notes, length: 50) : "-" %></td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <%= link_to edit_text_mapping_path(mapping), class: "btn btn-primary" do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                  
+                  <% if mapping.processed? %>
+                    <%= button_to mark_unprocessed_text_mapping_path(mapping), method: :post, class: "btn btn-warning", title: "Mark as unprocessed" do %>
+                      <i class="bi bi-x-circle"></i>
+                    <% end %>
+                  <% else %>
+                    <%= button_to mark_processed_text_mapping_path(mapping), method: :post, class: "btn btn-success", title: "Mark as processed" do %>
+                      <i class="bi bi-check-circle"></i>
+                    <% end %>
+                  <% end %>
+                  
+                  <%= button_to text_mapping_path(mapping), method: :delete, 
+                      class: "btn btn-danger", title: "Delete",
+                      form: { data: { turbo_confirm: "Are you sure you want to delete this mapping?" } } do %>
+                    <i class="bi bi-trash"></i>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </form>
+<% else %>
+  <div class="alert alert-info">
+    No model groups found for this make. <%= link_to "Create a new model group", new_text_mapping_path(category_id: @model_group_category.id, parent_id: @parent_id), class: "alert-link" %>.
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    setupCheckboxes();
+  });
+
+  // İlk yükleme ve Turbo gezintileri için fonksiyonu tanımla
+  function setupCheckboxes() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const mappingCheckboxes = document.querySelectorAll('.mapping-checkbox');
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const deselectAllBtn = document.getElementById('deselect-all-btn');
+    
+    if(!selectAllCheckbox) return; // Form yoksa çık
+    
+    // Select all checkbox functionality
+    selectAllCheckbox.addEventListener('click', function() {
+      const isChecked = this.checked;
+      mappingCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = isChecked;
+      });
+    });
+    
+    // Select all button
+    selectAllBtn.addEventListener('click', function() {
+      mappingCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = true;
+      });
+      selectAllCheckbox.checked = true;
+    });
+    
+    // Deselect all button
+    deselectAllBtn.addEventListener('click', function() {
+      mappingCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = false;
+      });
+      selectAllCheckbox.checked = false;
+    });
+    
+    // Update select all checkbox when individual checkboxes change
+    mappingCheckboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('click', function() {
+        const allChecked = Array.from(mappingCheckboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(mappingCheckboxes).some(cb => cb.checked);
+        
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = anyChecked && !allChecked;
+      });
+    });
+  }
+</script> 
