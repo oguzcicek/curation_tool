@@ -348,21 +348,17 @@
                   <span class="text-muted">-</span>
                 <% end %>
               </td>
-              <td><%= mapping.notes.present? ? truncate(mapping.notes, length: 50) : "-" %></td>
+              <td>
+                <% if mapping.notes.present? %>
+                  <i class="bi bi-card-text text-primary" title="<%= mapping.notes %>"></i>
+                <% else %>
+                  <span class="text-muted">-</span>
+                <% end %>
+              </td>
               <td>
                 <div class="btn-group btn-group-sm">
                   <%= link_to edit_text_mapping_path(mapping), class: "btn btn-primary" do %>
                     <i class="bi bi-pencil"></i>
-                  <% end %>
-                  
-                  <% if mapping.processed? %>
-                    <%= button_to mark_unprocessed_text_mapping_path(mapping), method: :post, class: "btn btn-warning", title: "Mark as unprocessed" do %>
-                      <i class="bi bi-x-circle"></i>
-                    <% end %>
-                  <% else %>
-                    <%= button_to mark_processed_text_mapping_path(mapping), method: :post, class: "btn btn-success", title: "Mark as processed" do %>
-                      <i class="bi bi-check-circle"></i>
-                    <% end %>
                   <% end %>
                   
                   <%= button_to toggle_hidden_text_mapping_path(mapping), method: :post, class: "btn #{mapping.is_hidden ? 'btn-info' : 'btn-secondary'}", 
@@ -381,12 +377,6 @@
                         class: "btn btn-info", title: "View Model Groups" do %>
                       <i class="bi bi-diagram-3"></i>
                     <% end %>
-                  <% end %>
-                  
-                  <%= button_to text_mapping_path(mapping), method: :delete, 
-                      class: "btn btn-danger", title: "Delete",
-                      form: { data: { turbo_confirm: "Are you sure you want to delete this mapping?" } } do %>
-                    <i class="bi bi-trash"></i>
                   <% end %>
                 </div>
               </td>
